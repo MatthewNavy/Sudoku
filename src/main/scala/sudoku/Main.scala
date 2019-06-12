@@ -3,13 +3,20 @@ package sudoku
 import scalafx.Includes._
 import scalafx.application.JFXApp
 import scalafx.scene.Scene
-import scalafx.scene.canvas.Canvas
+import scalafx.scene.canvas.{Canvas, GraphicsContext}
+import scalafx.scene.control.Alert.AlertType
+import scalafx.scene.control.{Alert, ButtonType}
 import scalafx.scene.input.MouseEvent
+import scalafx.scene.paint.Color
 import scalafx.scene.text.Font
 
 object Main extends JFXApp {
   val w = 800
   val h = 800
+  val wSpacing = w / 9
+  val hSpacing = h / 9
+  val wOffset = w / 24
+  val hOffset = h / 15
 
   // DEBUG
   //val grid = Array.tabulate(9)(i => Array.tabulate(9)(j => new Cell(i, j, i + j + "", false)))
@@ -29,6 +36,61 @@ object Main extends JFXApp {
         else new Cell(j, i, lines(i)(j).toString, true)
       }).toArray
     }).toArray
+  }
+
+  def drawBoard(grid: Array[Array[Cell]], gc: GraphicsContext): Unit =
+  {
+    grid.foreach(arr => arr.foreach({ cell =>
+      if (!cell.isGiven) gc.fill = Color.Blue
+      else gc.fill = Color.Black
+      gc.fillText(cell.value, cell.x * wSpacing + wOffset, cell.y * hSpacing + hOffset)
+    }))
+  }
+
+  def cellClicked(x: Double, y: Double, grid: Array[Array[Cell]], gc: GraphicsContext): Unit =
+  {
+    for(arr <- grid)
+    {
+      for(cell <- arr)
+      {
+        if(x < cell.x * wSpacing + wSpacing && x > cell.x * wSpacing && y < cell.y * hSpacing + hSpacing && y > cell.y * hSpacing && !cell.isGiven)
+        {
+          val ButtonTypeOne = new ButtonType("1")
+          val ButtonTypeTwo = new ButtonType("2")
+          val ButtonTypeThree = new ButtonType("3")
+          val ButtonTypeFour = new ButtonType("4")
+          val ButtonTypeFive = new ButtonType("5")
+          val ButtonTypeSix = new ButtonType("6")
+          val ButtonTypeSeven = new ButtonType("7")
+          val ButtonTypeEight = new ButtonType("8")
+          val ButtonTypeNine = new ButtonType("9")
+
+          val alert = new Alert(AlertType.Confirmation) {
+            initOwner(stage)
+            title = "Number Input"
+            headerText = "Enter a number into this cell."
+            contentText = "Choose your guess."
+            buttonTypes = Seq(
+              ButtonTypeOne, ButtonTypeTwo, ButtonTypeThree, ButtonTypeFour, ButtonTypeFive, ButtonTypeSix, ButtonTypeSeven, ButtonTypeEight, ButtonTypeNine, ButtonType.Cancel)
+          }
+
+          val result = alert.showAndWait()
+
+          result match {
+            case Some(button) =>
+            {
+              if (button != ButtonType.Cancel && button.text != cell.value)
+              {
+                gc.clearRect(cell.x * wSpacing + wSpacing / 9, cell.y * hSpacing + hSpacing / 9, wSpacing - wSpacing / 8, hSpacing - hSpacing / 8)
+                cell.updateValue(button.text)
+                drawBoard(grid, gc)
+              }
+            }
+            case _ => println("User chose CANCEL or closed the dialog")
+          }
+        }
+      }
+    }
   }
 
 
@@ -72,15 +134,12 @@ object Main extends JFXApp {
 
       val grid = readBoard(1)
 
-      grid.foreach(arr => arr.foreach({ cell =>
-        gc.font_=(new Font("Times Roman", 32))
-        gc.fillText(cell.value, cell.x * w / 9 + w / 24, cell.y * h / 9 + h / 15)
-      }))
+      gc.font_=(new Font("Times Roman", 32))
+      drawBoard(grid, gc)
 
       onMousePressed = (me: MouseEvent) =>
       {
-        // TODO:
-        // Handle mouse clicks and edit cells
+        cellClicked(me.x, me.y, grid, gc)
       }
 
     }
