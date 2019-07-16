@@ -4,7 +4,7 @@
 		module="summer2019$sources"
 		revision="0.1"
 		status="integration"
-		publication="20190612115134"
+		publication="20190612184001"
 	/>
 	<configurations>
 		<conf name="compile" visibility="public" description=""/>
